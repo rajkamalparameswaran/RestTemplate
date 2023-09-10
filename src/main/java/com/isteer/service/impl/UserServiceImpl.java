@@ -1,5 +1,6 @@
 package com.isteer.service.impl;
 
+import java.security.Principal;
 import java.sql.SQLException;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -40,6 +41,9 @@ public class UserServiceImpl implements UserService {
 
 	@Autowired
 	UserDao userDao;
+
+	@Autowired
+	Principal principal;
 
 	public void userIdFoundAndExceptionThrower(Integer userId) {
 		boolean idFound;
@@ -90,7 +94,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public UserResponse updateUser(User user, String loggedUser, boolean isAdmin) {
+	public UserResponse updateUser(User user) {
 		userIdFoundAndExceptionThrower(user.getUserId());
 		try {
 			if (userDao.toCheckDuplicateUserName(user.getUserName(), user.getUserId()) != 0
@@ -98,7 +102,7 @@ public class UserServiceImpl implements UserService {
 				throw new SQLException(failedMsg.getNameOrEmailAlreadyExist());
 			}
 			User tempUser = userDao.getUserById(user.getUserId());
-			if (isAdmin) {
+			if (principal.toString().contains("ADMIN")) {
 				userDao.updateUserByAdmin(user);
 				updateListOfAddress(user.getUserAddresses(), user.getUserId());
 				updateListOfRoles(user.getUserRoles(), user.getUserId());
@@ -107,7 +111,7 @@ public class UserServiceImpl implements UserService {
 				return new UserResponse(StatusCode.SUCESSCODE.getCode(), successMsg.getAccountUpdated(),
 						userDao.getUserById(user.getUserId()));
 			} else {
-				if (tempUser.getUserName().equals(loggedUser)) {
+				if (tempUser.getUserName().equals(principal.getName())) {
 					userDao.updateUserByUser(user);
 					updateListOfAddress(user.getUserAddresses(), user.getUserId());
 					AUDITLOG.info(LOGMSG, successMsg.getAccountUpdated(), user.getUserId());
@@ -417,7 +421,7 @@ public class UserServiceImpl implements UserService {
 
 	@Override
 	public void addValidToken(String jwt, String issuedTime, String expiredTime) throws SQLException {
-			userDao.addValidToken(jwt, issuedTime, expiredTime);
+		userDao.addValidToken(jwt, issuedTime, expiredTime);
 	}
 
 	@Override
@@ -427,7 +431,7 @@ public class UserServiceImpl implements UserService {
 		} catch (Exception e) {
 			throw new SqlQueryException(StatusCode.SQLEXCEPTIONCODE.getCode(), failedMsg.getInvalidSqlQuery(),
 					Arrays.asList(e.getLocalizedMessage()));
-		}		
+		}
 	}
 
 }

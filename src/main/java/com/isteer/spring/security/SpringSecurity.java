@@ -1,5 +1,6 @@
 package com.isteer.spring.security;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.context.annotation.Bean;
@@ -11,6 +12,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,22 +28,22 @@ import com.isteer.module.EndPoint;
 @Configuration
 @EnableWebSecurity
 public class SpringSecurity {
-	
-	private final UserDetailsService userDetailsService;
-    private final JwtFilter jwtFilter;
-    private final CustomBearerTokenExceptionEntryPoint customBearerTokenExceptionEntryPoint;
-    private final AccessDeniedEntryPoint accessDeniedEntryPoint;
-    private final UserDao dao;
 
-    public SpringSecurity(UserDetailsService userDetailsService, JwtFilter jwtFilter,
-                          CustomBearerTokenExceptionEntryPoint customBearerTokenExceptionEntryPoint,
-                          AccessDeniedEntryPoint accessDeniedEntryPoint, UserDao dao) {
-        this.userDetailsService = userDetailsService;
-        this.jwtFilter = jwtFilter;
-        this.customBearerTokenExceptionEntryPoint = customBearerTokenExceptionEntryPoint;
-        this.accessDeniedEntryPoint = accessDeniedEntryPoint;
-        this.dao = dao;
-    }
+	private final UserDetailsService userDetailsService;
+	private final JwtFilter jwtFilter;
+	private final CustomBearerTokenExceptionEntryPoint customBearerTokenExceptionEntryPoint;
+	private final AccessDeniedEntryPoint accessDeniedEntryPoint;
+	private final UserDao dao;
+
+	public SpringSecurity(UserDetailsService userDetailsService, JwtFilter jwtFilter,
+			CustomBearerTokenExceptionEntryPoint customBearerTokenExceptionEntryPoint,
+			AccessDeniedEntryPoint accessDeniedEntryPoint, UserDao dao) {
+		this.userDetailsService = userDetailsService;
+		this.jwtFilter = jwtFilter;
+		this.customBearerTokenExceptionEntryPoint = customBearerTokenExceptionEntryPoint;
+		this.accessDeniedEntryPoint = accessDeniedEntryPoint;
+		this.dao = dao;
+	}
 
 	@Bean
 	public PasswordEncoder bCryptPasswordEncoder() {
@@ -62,11 +64,11 @@ public class SpringSecurity {
 						request -> request.requestMatchers(endPoint.getEndPointName()).hasAnyAuthority(authority));
 			}
 		}
-		httpSecurity.authorizeHttpRequests(request -> request.requestMatchers("/logOut").authenticated());
+		httpSecurity.authorizeHttpRequests(request -> request.anyRequest().permitAll());
 		httpSecurity
-		.exceptionHandling(exp -> exp.authenticationEntryPoint(customBearerTokenExceptionEntryPoint)
-				.accessDeniedHandler(accessDeniedEntryPoint))
-		.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+				.exceptionHandling(exp -> exp.authenticationEntryPoint(customBearerTokenExceptionEntryPoint)
+						.accessDeniedHandler(accessDeniedEntryPoint))
+				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 		httpSecurity.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 		return httpSecurity.build();
 	}

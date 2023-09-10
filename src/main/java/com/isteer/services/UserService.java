@@ -15,7 +15,7 @@ public interface UserService {
 
 	public UserResponse addUser(User user);
 
-	public UserResponse updateUser(User user, String loggedUser, boolean isAdmin);
+	public UserResponse updateUser(User user);
 
 	public Map<String, Object> deleteUserById(Integer userId);
 

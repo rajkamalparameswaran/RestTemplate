@@ -3,6 +3,7 @@ package com.isteer.jwt.token;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,7 +25,7 @@ public class JwtUtil {
 
 	private String createNewToken(Map<String, Object> claims, String subject) {
 		return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
-				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 5))
+				.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 5)).setId(UUID.randomUUID().toString())
 				.signWith(SignatureAlgorithm.HS256, secretKey).compact();
 	}
 

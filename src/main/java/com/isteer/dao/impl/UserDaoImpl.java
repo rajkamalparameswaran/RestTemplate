@@ -40,7 +40,7 @@ public class UserDaoImpl implements UserDao {
 
 	@Autowired
 	FailedMessage failedMsg;
-
+	
 	@Override
 	public boolean isIdFound(Integer userId) throws SQLException {
 		try {
